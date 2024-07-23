@@ -3,12 +3,8 @@
 require_once './vendor/autoload.php';
 
 use PhpServer\Infrastructure\Server\Server;
-use PhpServer\Infrastructure\Server\Validator\ApplicationJsonValidator;
-use PhpServer\Infrastructure\Server\Validator\FormUrlEncodedValidator;
+use PhpServer\Services\DependencyInjector\ServiceContainer;
 
-$validators = [
-    new ApplicationJsonValidator(),
-    new FormUrlEncodedValidator()
-];
-$server = new Server();
+$container = new ServiceContainer();
+$server = $container->get(Server::class);
 $server->listen();

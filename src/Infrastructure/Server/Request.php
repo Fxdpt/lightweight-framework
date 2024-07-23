@@ -5,12 +5,20 @@ namespace PhpServer\Infrastructure\Server;
 use Exception;
 use PhpServer\Infrastructure\Server\Validator\ContentTypeValidatorInterface;
 use ReflectionClass;
+use PhpServer\Attributes\InterfaceIterator;
 
 final class Request
 {
     public const CONTENT_TYPE_HEADER = 'Content-Type';
 
     /**
+     * @var ContentTypeValidatorInterface[]
+     */
+    private static array $supportedValidators = [];
+
+    /**
+     *
+     * @param ContentTypeValidatorInterface[] $validators
      * @param array{
      *  http_method: string,
      *  request_target: string,
@@ -19,11 +27,15 @@ final class Request
      * @param array<string, string> $headers
      * @param string|null $body
      */
+    #[InterfaceIterator('validators', ContentTypeValidatorInterface::class)]
     public function __construct(
+        private readonly array $validators,
         private readonly array $requestLines = [],
         private readonly array $headers = [],
-        private readonly ?string $body = null
+        private readonly ?string $body = null,
     ) {
+
+        self::$supportedValidators = $validators;
     }
 
     /**
@@ -32,12 +44,13 @@ final class Request
      * @param string $httpRequest
      * @return self
      */
-    public static function withFullParts(string $httpRequest): self
+    public function withFullParts(string $httpRequest): self
     {
         return (new Request(
             requestLines: self::parseRequestLines($httpRequest),
             headers: self::parseHeaders($httpRequest),
-            body: self::parseBody($httpRequest)
+            body: self::parseBody($httpRequest),
+            validators: self::$supportedValidators
         ));
     }
 
@@ -102,11 +115,16 @@ final class Request
         return $body;
     }
 
+    /**
+     * Validate request body is valid according to request Content-Type
+     *
+     * @param string $body
+     * @param string $contentType
+     * @return void
+     */
     private static function validateBodyFormat(string $body, string $contentType): void
     {
-        $validators = self::getValidators();
-
-        foreach ($validators as $validator) {
+        foreach (self::$supportedValidators as $validator) {
             if ($validator->supports($contentType)) {
                 if (! $validator->isValid($body)) {
                     throw new Exception(sprintf("Request body mismatch format for Content-Type: [%s]", $contentType));
@@ -117,23 +135,5 @@ final class Request
         }
 
         throw new Exception(sprintf("No validator found for Content-Type: [%s]", $contentType));
-    }
-
-    /**
-     *
-     *
-     * @return ContentTypeValidatorInterface[]
-     */
-    private static function getValidators(): array
-    {
-        $classes = get_declared_classes();
-        $validators = [];
-        foreach ($classes as $class) {
-            if((new ReflectionClass($class))->implementsInterface(ContentTypeValidatorInterface::class)) {
-                $validators[] = new $class();
-            }
-        }
-
-        return $validators;
     }
 }
