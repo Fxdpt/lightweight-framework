@@ -179,7 +179,6 @@ final class ServiceContainer
         array $attributes
     ): array {
         $instances = [];
-
         // Loop through each attribute
         foreach ($attributes as $attribute) {
             // Check if the attribute matches the parameter

@@ -29,7 +29,7 @@ final class Request
      */
     #[InterfaceIterator('validators', ContentTypeValidatorInterface::class)]
     public function __construct(
-        private readonly array $validators,
+        #[InterfaceIterator(ContentTypeValidatorInterface::class)] private readonly array $validators,
         private readonly array $requestLines = [],
         private readonly array $headers = [],
         private readonly ?string $body = null,

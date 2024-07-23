@@ -10,21 +10,10 @@ class InterfaceIterator
     /**
      * Constructs a new instance of the InterfaceIterator class.
      *
-     * @param string $variableName The name of the variable.
      * @param string $interface The name of the interface.
      */
-    public function __construct(private readonly string $variableName, private readonly string $interface)
+    public function __construct(private readonly string $interface)
     {
-    }
-
-    /**
-     * Get the name of the variable.
-     *
-     * @return string The name of the variable.
-     */
-    public function getVariableName(): string
-    {
-        return $this->variableName;
     }
 
     /**
